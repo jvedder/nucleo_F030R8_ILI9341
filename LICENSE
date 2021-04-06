@@ -19,3 +19,147 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+/**
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+  /*
+
+
+/*  
+This is the core graphics library for all our displays, providing a common
+set of graphics primitives (points, lines, circles, etc.).  It needs to be
+paired with a hardware-specific library for each display device we carry
+(to handle the lower-level functions).
+
+Adafruit invests time and resources providing this open source code, please
+support Adafruit & open-source hardware by purchasing products from Adafruit!
+
+Copyright (c) 2013 Adafruit Industries.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
+ --------------------------------------------------------------------------------
+
+// Graphics library by ladyada/adafruit with init code from Rossum
+// MIT license
+
+ --------------------------------------------------------------------------------
+ 
+ /*!
+ * @file Adafruit_SPITFT.cpp
+ *
+ * @mainpage Adafruit SPI TFT Displays (and some others)
+ *
+ * @section intro_sec Introduction
+ *
+ * Part of Adafruit's GFX graphics library. Originally this class was
+ * written to handle a range of color TFT displays connected via SPI,
+ * but over time this library and some display-specific subclasses have
+ * mutated to include some color OLEDs as well as parallel-interfaced
+ * displays. The name's been kept for the sake of older code.
+ *
+ * Adafruit invests time and resources providing this open source code,
+ * please support Adafruit and open-source hardware by purchasing
+ * products from Adafruit!
+
+ * @section dependencies Dependencies
+ *
+ * This library depends on <a href="https://github.com/adafruit/Adafruit_GFX">
+ * Adafruit_GFX</a> being present on your system. Please make sure you have
+ * installed the latest version before using this library.
+ *
+ * @section author Author
+ *
+ * Written by Limor "ladyada" Fried for Adafruit Industries,
+ * with contributions from the open source community.
+ *
+ * @section license License
+ *
+ * BSD license, all text here must be included in any redistribution.
+ */
+ 
+ --------------------------------------------------------------------------------
+  
+/*!
+ * @file Adafruit_ILI9341.cpp
+ *
+ * @mainpage Adafruit ILI9341 TFT Displays
+ *
+ * @section intro_sec Introduction
+ *
+ * This is the documentation for Adafruit's ILI9341 driver for the
+ * Arduino platform.
+ *
+ * This library works with the Adafruit 2.8" Touch Shield V2 (SPI)
+ *    http://www.adafruit.com/products/1651
+ *
+ * Adafruit 2.4" TFT LCD with Touchscreen Breakout w/MicroSD Socket - ILI9341
+ *    https://www.adafruit.com/product/2478
+ *
+ * 2.8" TFT LCD with Touchscreen Breakout Board w/MicroSD Socket - ILI9341
+ *    https://www.adafruit.com/product/1770
+ *
+ * 2.2" 18-bit color TFT LCD display with microSD card breakout - ILI9340
+ *    https://www.adafruit.com/product/1770
+ *
+ * TFT FeatherWing - 2.4" 320x240 Touchscreen For All Feathers
+ *    https://www.adafruit.com/product/3315
+ *
+ * These displays use SPI to communicate, 4 or 5 pins are required
+ * to interface (RST is optional).
+ *
+ * Adafruit invests time and resources providing this open source code,
+ * please support Adafruit and open-source hardware by purchasing
+ * products from Adafruit!
+ *
+ * @section dependencies Dependencies
+ *
+ * This library depends on <a href="https://github.com/adafruit/Adafruit_GFX">
+ * Adafruit_GFX</a> being present on your system. Please make sure you have
+ * installed the latest version before using this library.
+ *
+ * @section author Author
+ *
+ * Written by Limor "ladyada" Fried for Adafruit Industries.
+ *
+ * @section license License
+ *
+ * BSD license, all text here must be included in any redistribution.
+ *
+ */
+  
+ --------------------------------------------------------------------------------
+ 
