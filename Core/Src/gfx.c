@@ -10,14 +10,13 @@
 #include "fonts/FreeSans12pt7b.h"
 #include "fonts/FreeSerif12pt7b.h"
 
-
 const GFXfont *GFX_Font = &FreeSerif12pt7b;
 int16_t GFX_cursor_x = 0;       // x location to start print()ing text
 int16_t GFX_cursor_y = 0;       // y location to start print()ing text
 uint16_t GFX_textcolor = 0;     // 16-bit background color for print()
 uint16_t GFX_textbgcolor = 0;   // 16-bit text color for print()
-uint8_t GFX_textsize_x = 1;     // Desired magnification in X-axis of text to print()
-uint8_t GFX_textsize_y = 1;     // Desired magnification in Y-axis of text to print()
+uint8_t GFX_textsize_x = 1;  // Desired magnification in X-axis of text to print()
+uint8_t GFX_textsize_y = 1;  // Desired magnification in Y-axis of text to print()
 uint8_t GFX_wrap = 1;           // If set, 'wrap' text at right edge of display
 
 /**
@@ -26,10 +25,10 @@ uint8_t GFX_wrap = 1;           // If set, 'wrap' text at right edge of display
  * @param  size_x  Desired text width magnification level in X-axis. 1 is default
  * @param  size_y  Desired text width magnification level in Y-axis. 1 is default
  */
-void GFX_SetTextSize(uint8_t size_x, uint8_t size_y)
+void GFX_SetTextSize( uint8_t size_x, uint8_t size_y )
 {
-  GFX_textsize_x = (size_x > 0) ? size_x : 1;
-  GFX_textsize_y = (size_y > 0) ? size_y : 1;
+    GFX_textsize_x = ( size_x > 0 ) ? size_x : 1;
+    GFX_textsize_y = ( size_y > 0 ) ? size_y : 1;
 }
 
 /**
@@ -38,10 +37,10 @@ void GFX_SetTextSize(uint8_t size_x, uint8_t size_y)
  * @param  curs_x  Desired text position in X-axis.
  * @param  curs_y  Desired text position in Y-axis.
  */
-void GFX_SetCursor(uint8_t curs_x, uint8_t curs_y)
+void GFX_SetCursor( uint8_t curs_x, uint8_t curs_y )
 {
-    GFX_cursor_x = (curs_x > 0) ? curs_x : 1;
-    GFX_cursor_y = (curs_y > 0) ? curs_y : 1;
+    GFX_cursor_x = ( curs_x > 0 ) ? curs_x : 1;
+    GFX_cursor_y = ( curs_y > 0 ) ? curs_y : 1;
 }
 
 /**
@@ -49,7 +48,7 @@ void GFX_SetCursor(uint8_t curs_x, uint8_t curs_y)
  *
  *  @param    color 16-bit 5-6-5 Color to draw character with.
  */
-void GFX_SetTextColor(uint16_t color)
+void GFX_SetTextColor( uint16_t color )
 {
     GFX_textcolor = color;
 }
@@ -115,11 +114,10 @@ void GFX_WriteChar( int16_t x, int16_t y, unsigned char c, uint16_t color,
     }
 }
 
-
 /**
- *   Print one byte/character of data. Can be used to support print()
+ *   Draws one character of data. Moves text cursor and supports newline ('\n').
  *
- *   @param  c  The 8-bit ascii character to write
+ *   @param  c  The 7-bit ASCII character to draw
  */
 void GFX_DrawChar( uint8_t c )
 {
@@ -131,7 +129,7 @@ void GFX_DrawChar( uint8_t c )
     else if ( c != '\r' )
     {
         uint8_t first = (uint8_t) ( GFX_Font->first );
-        if ( ( c >= first ) && ( c <= (uint8_t) ( GFX_Font->last ) ) )
+        if ( ( first <= c ) && ( c <= GFX_Font->last ) )
         {
             GFXglyph *glyph = GFX_Font->glyph + ( c - first );
             uint8_t w = glyph->width;
@@ -140,15 +138,38 @@ void GFX_DrawChar( uint8_t c )
             {  // Is there an associated bitmap?
                 int16_t xo = (int8_t) ( glyph->xOffset );
                 if ( GFX_wrap
-                        && ( ( GFX_cursor_x + GFX_textsize_x * ( xo + w ) ) > LCD_width ) )
+                        && ( ( GFX_cursor_x + GFX_textsize_x * ( xo + w ) )
+                                > LCD_width ) )
                 {
                     GFX_cursor_x = 0;
                     GFX_cursor_y += ( GFX_textsize_y * ( GFX_Font->yAdvance ) );
                 }
-                GFX_WriteChar( GFX_cursor_x, GFX_cursor_y, c, GFX_textcolor, GFX_textsize_x,
-                        GFX_textsize_y );
+                GFX_WriteChar( GFX_cursor_x, GFX_cursor_y, c, GFX_textcolor,
+                        GFX_textsize_x, GFX_textsize_y );
             }
-        GFX_cursor_x += (GFX_textsize_x * ( glyph->xAdvance ));
-            }
+            GFX_cursor_x += ( GFX_textsize_x * ( glyph->xAdvance ) );
         }
     }
+}
+
+
+/**
+ *   Draws a string of text at the current cursor position. Text must be null-terminated and less than 128
+ *   characters. Supports newline ('\n').
+ *
+ *   @param  text  The null-terminated text string.
+ */
+void GFX_DrawText( const uint8_t *text )
+{
+    uint16_t overrun = 128;
+
+    while (*text && overrun)
+    {
+        /* buffer to remove const attribute */
+        uint8_t c = (uint8_t) *text;
+        GFX_DrawChar(c);
+        text++;
+        overrun--;
+    }
+}
+

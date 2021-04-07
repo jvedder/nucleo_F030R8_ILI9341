@@ -53,6 +53,7 @@ void GFX_SetTextColor(uint16_t color);
 void GFX_WriteChar( int16_t x, int16_t y, unsigned char c, uint16_t color,
         uint8_t size_x, uint8_t size_y );
 void GFX_DrawChar( uint8_t c );
+void GFX_DrawText( const uint8_t *text );
 
 
 #endif //_GFX_H

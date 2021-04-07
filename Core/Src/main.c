@@ -96,35 +96,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   LCD_Init();
-  LCD_FillScreen(ILI9341_BLACK);
+  LCD_FillScreen(ILI9341_WHITE);
+  GFX_cursor_x = 0;
+  GFX_cursor_y = 40;
+  GFX_textcolor = ILI9341_BLACK;
+  GFX_Font = &FreeMono12pt7b;
+  GFX_DrawText( (const uint8_t *)"Mono\n" );
+  GFX_Font = &FreeSans12pt7b;
+  GFX_DrawText( (const uint8_t *)"Sans\n" );
+  GFX_Font = &FreeSerif12pt7b;
+  GFX_DrawText( (const uint8_t *)"Serif\n" );
+
   //LCD_WriteFillRectPreclipped(10, 20, 30, 40, ILI9341_RED);
   //LCD_DrawHLine(41,60, 30, ILI9341_BLUE );
   //LCD_DrawVLine(40,61, 40, ILI9341_GREEN );
   //LCD_DrawLine(1,1, 100, 200, ILI9341_WHITE);
-  GFX_cursor_x = 0;
-  GFX_cursor_y = 40;
-  GFX_textcolor = ILI9341_WHITE;
-  GFX_Font = &FreeMono12pt7b;
-  GFX_DrawChar('H');
-  GFX_DrawChar('e');
-  GFX_DrawChar('l');
-  GFX_DrawChar('l');
-  GFX_DrawChar('o');
-  GFX_DrawChar('\n');
-  GFX_Font = &FreeSans12pt7b;
-  GFX_DrawChar('W');
-  GFX_DrawChar('o');
-  GFX_DrawChar('r');
-  GFX_DrawChar('l');
-  GFX_DrawChar('d');
-  GFX_DrawChar('\n');
-  GFX_Font = &FreeSerif12pt7b;
-  GFX_DrawChar('S');
-  GFX_DrawChar('T');
-  GFX_DrawChar('M');
-  GFX_DrawChar('3');
-  GFX_DrawChar('2');
-  GFX_DrawChar('\n');
 
 
   /* USER CODE END 2 */
