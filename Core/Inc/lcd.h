@@ -88,9 +88,49 @@
 #define ILI9341_PINK 0xFC18        ///< 255, 130, 198
 
 
+/**
+ * Font data stored PER GLYPH
+ */
+typedef struct {
+  uint16_t bitmapOffset; // Pointer into GFXfont->bitmap
+  uint8_t width;         // Bitmap dimensions in pixels
+  uint8_t height;        // Bitmap dimensions in pixels
+  uint8_t xAdvance;      // Distance to advance cursor (x axis)
+  int8_t xOffset;        // X dist from cursor pos to UL corner
+  int8_t yOffset;        // Y dist from cursor pos to UL corner
+} GFXglyph;
+
+/**
+ * Data stored for FONT AS A WHOLE
+ */
+typedef struct {
+  uint8_t *bitmap;  // Glyph bitmaps, concatenated
+  GFXglyph *glyph;  // Glyph array
+  uint16_t first;   // ASCII extents (first char)
+  uint16_t last;    // ASCII extents (last char)
+  uint8_t yAdvance; // Newline distance (y axis)
+} GFXfont;
+
+/**
+ * Pointer to font data structure
+ */
+extern const GFXfont *LCD_Font;
+extern const GFXfont FreeMono12pt7b;
+extern const GFXfont FreeSans12pt7b;
+extern const GFXfont FreeSerif12pt7b;
+
 extern uint8_t  LCD_rotation;    // Display rotation (0 thru 3)
 extern uint16_t LCD_width;       // Display width as modified by current rotation
 extern uint16_t LCD_height;      // Display height as modified by current rotation
+
+extern int16_t LCD_cursor_x;       // x location to start print()ing text
+extern int16_t LCD_cursor_y;       // y location to start print()ing text
+extern uint16_t LCD_textcolor;     // 16-bit background color for print()
+extern uint16_t LCD_textbgcolor;   // 16-bit text color for print()
+extern uint8_t LCD_textsize_x;     // Desired magnification in X-axis of text to print()
+extern uint8_t LCD_textsize_y;     // Desired magnification in Y-axis of text to print()
+extern uint8_t LCD_wrap;           // If set, 'wrap' text at right edge of display
+
 
 /**
  * Public Method Definitions
@@ -112,8 +152,12 @@ void LCD_DrawLine( int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t colo
 void LCD_DrawRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color );
 void LCD_FillScreen( uint16_t color );
 
-
-
-
+void LCD_SetTextSize(uint8_t size_x, uint8_t size_y);
+void LCD_SetCursor(uint8_t curs_x, uint8_t curs_y);
+void LCD_SetTextColor(uint16_t color);
+void LCD_WriteChar( int16_t x, int16_t y, unsigned char c, uint16_t color,
+        uint8_t size_x, uint8_t size_y );
+void LCD_DrawChar( uint8_t c );
+void LCD_DrawText( const uint8_t *text );
 
 #endif // _LCD_H

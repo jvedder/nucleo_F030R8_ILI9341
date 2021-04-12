@@ -1,4 +1,4 @@
-# nucleo_F030R8_ILI9341
+# nucleo_F030R8_TFT
 
 Tinkering with a **2.8" TFT LCD with Cap Touch Breakout Board w/MicroSD Socket** attached to an 
 STM32 **Nucleo-F030R8** board. The **STM32F0303R8** connects via SPI1 port to the **ILI9341** LCD driver and 

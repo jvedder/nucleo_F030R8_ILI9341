@@ -27,7 +27,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lcd.h"
-#include "gfx.h"
 
 /* USER CODE END Includes */
 
@@ -97,15 +96,15 @@ int main(void)
 
   LCD_Init();
   LCD_FillScreen(ILI9341_WHITE);
-  GFX_cursor_x = 0;
-  GFX_cursor_y = 40;
-  GFX_textcolor = ILI9341_BLACK;
-  GFX_Font = &FreeMono12pt7b;
-  GFX_DrawText( (const uint8_t *)"Mono\n" );
-  GFX_Font = &FreeSans12pt7b;
-  GFX_DrawText( (const uint8_t *)"Sans\n" );
-  GFX_Font = &FreeSerif12pt7b;
-  GFX_DrawText( (const uint8_t *)"Serif\n" );
+  LCD_cursor_x = 0;
+  LCD_cursor_y = 40;
+  LCD_textcolor = ILI9341_BLACK;
+  LCD_Font = &FreeMono12pt7b;
+  LCD_DrawText( (const uint8_t *)"Mono\n" );
+  LCD_Font = &FreeSans12pt7b;
+  LCD_DrawText( (const uint8_t *)"Sans\n" );
+  LCD_Font = &FreeSerif12pt7b;
+  LCD_DrawText( (const uint8_t *)"Serif\n" );
 
   //LCD_WriteFillRectPreclipped(10, 20, 30, 40, ILI9341_RED);
   //LCD_DrawHLine(41,60, 30, ILI9341_BLUE );

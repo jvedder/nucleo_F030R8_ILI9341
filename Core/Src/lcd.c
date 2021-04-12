@@ -7,6 +7,11 @@
 #include "lcd.h"
 #include <stdlib.h>
 
+#define PROGMEM
+#include "fonts/FreeMono12pt7b.h"
+#include "fonts/FreeSans12pt7b.h"
+#include "fonts/FreeSerif12pt7b.h"
+
 
 #define MADCTL_MY 0x80  ///< Bottom to top
 #define MADCTL_MX 0x40  ///< Right to left
@@ -30,6 +35,16 @@
 uint8_t  LCD_rotation;    // Display rotation (0 thru 3)
 uint16_t LCD_width;       // Display width as modified by current rotation
 uint16_t LCD_height;      // Display height as modified by current rotation
+
+const GFXfont *LCD_Font = &FreeSerif12pt7b;
+int16_t LCD_cursor_x = 0;       // x location to start print()ing text
+int16_t LCD_cursor_y = 0;       // y location to start print()ing text
+uint16_t LCD_textcolor = 0;     // 16-bit background color for print()
+uint16_t LCD_textbgcolor = 0;   // 16-bit text color for print()
+uint8_t LCD_textsize_x = 1;  // Desired magnification in X-axis of text to print()
+uint8_t LCD_textsize_y = 1;  // Desired magnification in Y-axis of text to print()
+uint8_t LCD_wrap = 1;           // If set, 'wrap' text at right edge of display
+
 
 
 ///**
@@ -516,7 +531,6 @@ void LCD_DrawLine( int16_t x0, int16_t y0, int16_t x1, int16_t y1,
  *  @param    h   Height in pixels
  *  @param    color 16-bit 5-6-5 Color to draw with
  */
-/**************************************************************************/
 void LCD_DrawRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color )
 {
     LCD_DrawHLine( x, y, w, color );
@@ -533,4 +547,158 @@ void LCD_DrawRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color )
 void LCD_FillScreen( uint16_t color )
 {
     LCD_DrawFillRect( 0, 0, LCD_width, LCD_height, color );
+}
+
+/**
+ * Set text magnification multiplier in x and y.
+ *
+ * @param  size_x  Desired text width magnification level in X-axis. 1 is default
+ * @param  size_y  Desired text width magnification level in Y-axis. 1 is default
+ */
+void LCD_SetTextSize( uint8_t size_x, uint8_t size_y )
+{
+    LCD_textsize_x = ( size_x > 0 ) ? size_x : 1;
+    LCD_textsize_y = ( size_y > 0 ) ? size_y : 1;
+}
+
+/**
+ * Set the text cursor position in x and y.
+ *
+ * @param  curs_x  Desired text position in X-axis.
+ * @param  curs_y  Desired text position in Y-axis.
+ */
+void LCD_SetCursor( uint8_t curs_x, uint8_t curs_y )
+{
+    LCD_cursor_x = ( curs_x > 0 ) ? curs_x : 1;
+    LCD_cursor_y = ( curs_y > 0 ) ? curs_y : 1;
+}
+
+/**
+ * Set the text cursor position in x and y.
+ *
+ *  @param    color 16-bit 5-6-5 Color to draw character with.
+ */
+void LCD_SetTextColor( uint16_t color )
+{
+    LCD_textcolor = color;
+}
+
+/**
+ *  Draw a single character. Assumes non-printable and control characters are filtered out.
+ *
+ *  @param    x   Bottom left corner x coordinate
+ *  @param    y   Bottom left corner y coordinate
+ *  @param    c   The 8-bit font-indexed (character)
+ *  @param    color 16-bit 5-6-5 Color to draw character with
+ *  @param    size_x  Font magnification level in X-axis, 1 is 'original' size
+ *  @param    size_y  Font magnification level in Y-axis, 1 is 'original' size
+ */
+void LCD_WriteChar( int16_t x, int16_t y, unsigned char c, uint16_t color,
+        uint8_t size_x, uint8_t size_y )
+{
+
+    c -= ( LCD_Font->first );
+    GFXglyph *glyph = LCD_Font->glyph + c;
+    const uint8_t *bitmap = LCD_Font->bitmap;
+
+    uint16_t bo = glyph->bitmapOffset;
+    uint8_t w = glyph->width;
+    uint8_t h = glyph->height;
+    int8_t xo = glyph->xOffset;
+    int8_t yo = glyph->yOffset;
+    uint8_t xx;
+    uint8_t yy;
+    uint8_t bits = 0;
+    uint8_t bit = 0;
+    int16_t xo16 = 0;
+    int16_t yo16 = 0;
+
+    if ( size_x > 1 || size_y > 1 )
+    {
+        xo16 = xo;
+        yo16 = yo;
+    }
+
+    for ( yy = 0; yy < h; yy++ )
+    {
+        for ( xx = 0; xx < w; xx++ )
+        {
+            if ( !( bit++ & 7 ) )
+            {
+                bits = (uint8_t) ( bitmap[bo++ ] );
+            }
+            if ( bits & 0x80 )
+            {
+                if ( size_x == 1 && size_y == 1 )
+                {
+                    LCD_DrawPixel( x + xo + xx, y + yo + yy, color );
+                }
+                else
+                {
+                    LCD_DrawFillRect( x + ( xo16 + xx ) * size_x,
+                            y + ( yo16 + yy ) * size_y, size_x, size_y, color );
+                }
+            }
+            bits <<= 1;
+        }
+    }
+}
+
+/**
+ *   Draws one character of data. Moves text cursor and supports newline ('\n').
+ *
+ *   @param  c  The 7-bit ASCII character to draw
+ */
+void LCD_DrawChar( uint8_t c )
+{
+    if ( c == '\n' )
+    {
+        LCD_cursor_x = 0;
+        LCD_cursor_y += ( LCD_textsize_y * ( LCD_Font->yAdvance ) );
+    }
+    else if ( c != '\r' )
+    {
+        uint8_t first = (uint8_t) ( LCD_Font->first );
+        if ( ( first <= c ) && ( c <= LCD_Font->last ) )
+        {
+            GFXglyph *glyph = LCD_Font->glyph + ( c - first );
+            uint8_t w = glyph->width;
+            uint8_t h = glyph->height;
+            if ( ( w > 0 ) && ( h > 0 ) )
+            {  // Is there an associated bitmap?
+                int16_t xo = (int8_t) ( glyph->xOffset );
+                if ( LCD_wrap
+                        && ( ( LCD_cursor_x + LCD_textsize_x * ( xo + w ) )
+                                > LCD_width ) )
+                {
+                    LCD_cursor_x = 0;
+                    LCD_cursor_y += ( LCD_textsize_y * ( LCD_Font->yAdvance ) );
+                }
+                LCD_WriteChar( LCD_cursor_x, LCD_cursor_y, c, LCD_textcolor,
+                        LCD_textsize_x, LCD_textsize_y );
+            }
+            LCD_cursor_x += ( LCD_textsize_x * ( glyph->xAdvance ) );
+        }
+    }
+}
+
+
+/**
+ *   Draws a string of text at the current cursor position. Text must be null-terminated and less than 128
+ *   characters. Supports newline ('\n').
+ *
+ *   @param  text  The null-terminated text string.
+ */
+void LCD_DrawText( const uint8_t *text )
+{
+    uint16_t overrun = 128;
+
+    while (*text && overrun)
+    {
+        /* buffer to remove const attribute */
+        uint8_t c = (uint8_t) *text;
+        LCD_DrawChar(c);
+        text++;
+        overrun--;
+    }
 }
