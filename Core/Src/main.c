@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 #include "i2c.h"
 #include "spi.h"
 #include "usart.h"
@@ -27,6 +28,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lcd.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h> //for va_list var arg functions
 
 /* USER CODE END Includes */
 
@@ -53,12 +57,22 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void myprintf(const char *fmt, ...);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void myprintf(const char *fmt, ...) {
+  static char buffer[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
 
+  int len = strlen(buffer);
+  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, len, -1);
+
+}
 /* USER CODE END 0 */
 
 /**
@@ -92,6 +106,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   LCD_Init();

@@ -64,18 +64,22 @@ void Error_Handler(void);
 #define STLINK_TX_GPIO_Port GPIOA
 #define STLINK_RX_Pin GPIO_PIN_3
 #define STLINK_RX_GPIO_Port GPIOA
-#define LCD_SCK_Pin GPIO_PIN_5
-#define LCD_SCK_GPIO_Port GPIOA
-#define LCD_MISO_Pin GPIO_PIN_6
-#define LCD_MISO_GPIO_Port GPIOA
-#define LCD_MOSI_Pin GPIO_PIN_7
-#define LCD_MOSI_GPIO_Port GPIOA
+#define SPI1_SCK_Pin GPIO_PIN_5
+#define SPI1_SCK_GPIO_Port GPIOA
+#define SPI1_MISO_Pin GPIO_PIN_6
+#define SPI1_MISO_GPIO_Port GPIOA
+#define SPI1_MOSI_Pin GPIO_PIN_7
+#define SPI1_MOSI_GPIO_Port GPIOA
 #define DATA_CMD_Pin GPIO_PIN_7
 #define DATA_CMD_GPIO_Port GPIOC
+#define SD_DETECT_Pin GPIO_PIN_10
+#define SD_DETECT_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
+#define SD_CS_Pin GPIO_PIN_3
+#define SD_CS_GPIO_Port GPIOB
 #define LCD_CS_Pin GPIO_PIN_6
 #define LCD_CS_GPIO_Port GPIOB
 #define TS_SCL_Pin GPIO_PIN_8
@@ -83,6 +87,9 @@ void Error_Handler(void);
 #define TS_SDA_Pin GPIO_PIN_9
 #define TS_SDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+
+#define SD_SPI_HANDLE	hspi1
+#define UART_HANDLE		huart2
 
 /* USER CODE END Private defines */
 

@@ -226,7 +226,7 @@ uint16_t LCD_Color565( uint8_t r, uint8_t g, uint8_t b )
  * -------------------------------------------------------------------------
  * The LCD_Write* functions are lower-level and care must be taken on their
  * sequence.
- * TODO:Maybe make te LCD_Write* functions static.
+ * TODO: Maybe make the LCD_Write* functions static.
  * -------------------------------------------------------------------------
  */
 

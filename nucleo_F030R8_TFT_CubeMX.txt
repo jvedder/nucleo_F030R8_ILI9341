@@ -1,0 +1,106 @@
+Configuration	nucleo_F030R8_TFT_CubeMX
+STM32CubeMX 	6.2.1
+Date	04/13/2021
+MCU	STM32F030R8Tx
+
+
+
+PERIPHERALS	MODES	FUNCTIONS	PINS
+I2C1	I2C	I2C1_SCL	PB8
+I2C1	I2C	I2C1_SDA	PB9
+RCC	BYPASS Clock Source	RCC_OSC_IN	PF0-OSC_IN
+RCC	Crystal/Ceramic Resonator	RCC_OSC32_IN	PC14-OSC32_IN
+RCC	Crystal/Ceramic Resonator	RCC_OSC32_OUT	PC15-OSC32_OUT
+SPI1	Full-Duplex Master	SPI1_MISO	PA6
+SPI1	Full-Duplex Master	SPI1_MOSI	PA7
+SPI1	Full-Duplex Master	SPI1_SCK	PA5
+SYS	Serial_Wire	SYS_SWCLK	PA14
+SYS	Serial_Wire	SYS_SWDIO	PA13
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+USART2	Asynchronous	USART2_RX	PA3
+USART2	Asynchronous	USART2_TX	PA2
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+2	PC13	GPIO_Input	USER_BTN
+3	PC14-OSC32_IN	RCC_OSC32_IN	
+4	PC15-OSC32_OUT	RCC_OSC32_OUT	
+5	PF0-OSC_IN	RCC_OSC_IN	
+6	PF1-OSC_OUT*	RCC_OSC_OUT	
+16	PA2	USART2_TX	STLINK_TX
+17	PA3	USART2_RX	STLINK_RX
+21	PA5	SPI1_SCK	SPI1_SCK
+22	PA6	SPI1_MISO	SPI1_MISO
+23	PA7	SPI1_MOSI	SPI1_MOSI
+38	PC7	GPIO_Output	DATA_CMD
+43	PA10	GPIO_Input	SD_DETECT
+46	PA13	SYS_SWDIO	TMS
+49	PA14	SYS_SWCLK	TCK
+55	PB3	GPIO_Output	SD_CS
+58	PB6	GPIO_Output	LCD_CS
+61	PB8	I2C1_SCL	TS_SCL
+62	PB9	I2C1_SDA	TS_SDA
+PERIPHERALS	MODES	FUNCTIONS	PINS
+I2C1	I2C	I2C1_SCL	PB8
+I2C1	I2C	I2C1_SDA	PB9
+RCC	BYPASS Clock Source	RCC_OSC_IN	PF0-OSC_IN
+RCC	Crystal/Ceramic Resonator	RCC_OSC32_IN	PC14-OSC32_IN
+RCC	Crystal/Ceramic Resonator	RCC_OSC32_OUT	PC15-OSC32_OUT
+SPI1	Full-Duplex Master	SPI1_MISO	PA6
+SPI1	Full-Duplex Master	SPI1_MOSI	PA7
+SPI1	Full-Duplex Master	SPI1_SCK	PA5
+SYS	Serial_Wire	SYS_SWCLK	PA14
+SYS	Serial_Wire	SYS_SWDIO	PA13
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+USART2	Asynchronous	USART2_RX	PA3
+USART2	Asynchronous	USART2_TX	PA2
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+2	PC13	GPIO_Input	USER_BTN
+3	PC14-OSC32_IN	RCC_OSC32_IN	
+4	PC15-OSC32_OUT	RCC_OSC32_OUT	
+5	PF0-OSC_IN	RCC_OSC_IN	
+6	PF1-OSC_OUT*	RCC_OSC_OUT	
+16	PA2	USART2_TX	STLINK_TX
+17	PA3	USART2_RX	STLINK_RX
+21	PA5	SPI1_SCK	SPI1_SCK
+22	PA6	SPI1_MISO	SPI1_MISO
+23	PA7	SPI1_MOSI	SPI1_MOSI
+38	PC7	GPIO_Output	DATA_CMD
+43	PA10	GPIO_Input	SD_DETECT
+46	PA13	SYS_SWDIO	TMS
+49	PA14	SYS_SWCLK	TCK
+55	PB3	GPIO_Output	SD_CS
+58	PB6	GPIO_Output	LCD_CS
+61	PB8	I2C1_SCL	TS_SCL
+62	PB9	I2C1_SDA	TS_SDA
+
+
+
+SOFTWARE PROJECT
+
+Project Settings : 
+Project Name : nucleo_F030R8_TFT_CubeMX
+Project Folder : C:\Users\John\code\STM32CubeIDE\nucleo_F030R8_TFT_CubeMX
+Toolchain / IDE : STM32CubeIDE
+Firmware Package Name and Version : STM32Cube FW_F0 V1.11.2
+
+
+Code Generation Settings : 
+STM32Cube MCU packages and embedded software packs : Copy only the necessary library files
+Generate peripheral initialization as a pair of '.c/.h' files per peripheral : Yes
+Backup previously generated files when re-generating : Yes
+Delete previously generated files when not re-generated : No
+Set all free pins as analog (to optimize the power consumption) : No
+
+
+Toolchains Settings : 
+Compiler Optimizations : 
+
+
+
+
+
