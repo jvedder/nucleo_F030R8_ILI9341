@@ -28,9 +28,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lcd.h"
+#include "FT6206.h"
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h> //for va_list var arg functions
+//#include <stdarg.h> //for va_list var arg functions
 
 /* USER CODE END Includes */
 
@@ -51,18 +52,20 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void myprintf(const char *fmt, ...);
+//void myprintf(const char *fmt, ...);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void myprintf(const char *fmt, ...) {
+#if 0
+void myprintf(const char *fmt, ...)
+{
   static char buffer[256];
   va_list args;
   va_start(args, fmt);
@@ -73,6 +76,8 @@ void myprintf(const char *fmt, ...) {
   HAL_UART_Transmit(&huart2, (uint8_t*)buffer, len, -1);
 
 }
+#endif
+
 /* USER CODE END 0 */
 
 /**
@@ -109,6 +114,11 @@ int main(void)
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_Delay(1000);
+
+  printf("\r\n\r\nPOR\r\n");
+  printf("Build: " __DATE__ ", " __TIME__ "\r\n");
+
   LCD_Init();
   LCD_FillScreen(ILI9341_WHITE);
   LCD_cursor_x = 0;
@@ -126,14 +136,30 @@ int main(void)
   //LCD_DrawVLine(40,61, 40, ILI9341_GREEN );
   //LCD_DrawLine(1,1, 100, 200, ILI9341_WHITE);
 
+  FT6206_init(40);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  flag = 0;
   while (1)
   {
-    /* USER CODE END WHILE */
+      //printf("------------------\r\n");
+      FT6206_readData();
+      if (FT6206_touched)
+      {
+          printf("(%d,%d)\r\n", FT6206_touchX, FT6206_touchY);
+          flag = 0;
+      }
+      else if (flag == 0)
+      {
+          printf("Not Touched\r\n");
+          flag = 1;
+      }
+
+
+      /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -185,6 +211,23 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+int __io_putchar(int ch)
+{
+    /* Write a character to the UART and block until transmitted */
+    HAL_UART_Transmit(&UART_HANDLE, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
+
+int __io_getchar(void)
+{
+    int ch;
+    /* Read a character from UART and block until received */
+    HAL_UART_Receive(&UART_HANDLE, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
+
+
 
 /* USER CODE END 4 */
 

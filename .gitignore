@@ -11,3 +11,6 @@ Release/
 #ignore the Reference folder until it is cleaned up
 Ref/
 
+#ignore ods lock file
+.~lock.*
+

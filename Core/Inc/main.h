@@ -88,8 +88,9 @@ void Error_Handler(void);
 #define TS_SDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
-#define SD_SPI_HANDLE	hspi1
-#define UART_HANDLE		huart2
+#define SD_SPI_HANDLE	    hspi1
+#define UART_HANDLE		    huart2
+#define FT6206_I2C_HANDLE   hi2c1
 
 /* USER CODE END Private defines */
 
