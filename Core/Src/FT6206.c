@@ -15,9 +15,19 @@
 /*
  *  Global variables
  */
+uint8_t  TS_rotation;    // Display rotation (0 thru 3)
+uint16_t TS_width;       // Display width as modified by current rotation
+uint16_t TS_height;      // Display height as modified by current rotation
+
 uint8_t FT6206_touched;
 uint16_t FT6206_touchX;
 uint16_t FT6206_touchY;
+
+
+/*
+ * Private Variables
+ */
+static uint8_t i2cdata[16];
 
 /*
  * Private Function Prototypes
@@ -42,7 +52,6 @@ static void FT6206_writeRegister8( uint8_t reg, uint8_t val );
  */
 int8_t FT6206_init( uint8_t thresh )
 {
-
 #ifdef FT6206_DEBUG
 
     printf("FT6206_DEBUG\r\n");
@@ -62,40 +71,79 @@ int8_t FT6206_init( uint8_t thresh )
     // change threshold to be higher/lower
     FT6206_writeRegister8( FT6206_REG_THRESHHOLD, thresh );
 
-    if ( FT6206_readRegister8( FT6206_REG_VENDID ) != FT6206_VENDID )
+    if ( FT6206_readRegister8( FT6206_REG_VENDID ) != FT6206_VAL_VENDID ||
+         FT6206_readRegister8( FT6206_REG_CHIPID ) != FT6206_VAL_CHIPID )
     {
-        return 1;
-    }
-    if ( FT6206_readRegister8( FT6206_REG_CHIPID ) != FT6206_CHIPID )
-    {
-        return 1;
+        return 1; // failure
     }
 
     FT6206_touched = 0;
     FT6206_touchX = 0;
     FT6206_touchY = 0;
+    FT6206_setRotation(0);
 
-    return 0;
+    return 0; // OK
 }
 
 /**
- * Reads the bulk of data from cap touch chip. Fills in FT6206_touches,
- * FT6206_touchX[], FT6206_touchY[] and FT6206_touchID[] with results.
+ * Reads the bulk of data from cap touch chip. Fills in FT6206_touched,
+ * FT6206_touchX, and FT6206_touchY with results. The X and Y coordinates are adjusted
+ * per the current setting of TS_rotation.
  */
 void FT6206_readData( void )
 {
-    uint8_t i2cdata[16];
+    // Read: 1 address byte, 7 data bytes, 1000mSec timeout
+    HAL_I2C_Mem_Read( &FT6206_I2C_HANDLE, FT6206_ADDR, 0x00, 1, i2cdata, 7, 1000 );
 
-    HAL_I2C_Mem_Read( &FT6206_I2C_HANDLE, FT6206_ADDR, 0x00, 1, i2cdata, 16, 1000 );
+    FT6206_touched = (i2cdata[0x02] & 0x0F) ? 1 : 0;
+    uint16_t x = (( i2cdata[0x03] & 0x0F ) << 8) + ( i2cdata[0x04] );
+    uint16_t y = (( i2cdata[0x05] & 0x0F ) << 8) + ( i2cdata[0x06] );
 
-    FT6206_touched = i2cdata[0x02];
-    if (FT6206_touched > 2 ) FT6206_touched = 0;
+    switch(TS_rotation)
+    {
+        case 0:
+            // Noon
+            FT6206_touchX = FT6206_WIDTH - x;
+            FT6206_touchY = FT6206_HEIGHT - y;
+            break;
+        case 1:
+            // 3 o'clock
+            FT6206_touchX = FT6206_HEIGHT - y;
+            FT6206_touchY = x;
+            break;
+        case 2:
+            // 6 o'clock
+            FT6206_touchX = x;
+            FT6206_touchY = y;
+            break;
+        case 3:
+            FT6206_touchX = y;
+            FT6206_touchY = FT6206_WIDTH - x;
+            break;
+    }
+}
 
-    FT6206_touchX = ( i2cdata[0x03] & 0x0F ) << 8;
-    FT6206_touchX |= ( i2cdata[0x04] );
-
-    FT6206_touchY = ( i2cdata[0x05] & 0x0F ) << 8;
-    FT6206_touchY |= ( i2cdata[0x06] );
+/**
+ * Set origin of orientation of Touch Screen.
+ *
+ * @param   m  The index for rotation, from 0-3 inclusive
+ */
+void FT6206_setRotation(uint8_t m)
+{
+    TS_rotation = m & 0x03;     // force to 0 to 3
+    switch (TS_rotation)
+    {
+    case 0:
+    case 2:
+        TS_width = FT6206_WIDTH;
+        TS_height = FT6206_HEIGHT;
+        break;
+    case 1:
+    case 3:
+        TS_width = FT6206_HEIGHT;
+        TS_height = FT6206_WIDTH;
+        break;
+    }
 }
 
 /**

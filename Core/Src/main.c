@@ -125,12 +125,14 @@ int main(void)
   LCD_cursor_y = 40;
   LCD_textcolor = ILI9341_BLACK;
   LCD_Font = &FreeMono12pt7b;
-  LCD_DrawText( (const uint8_t *)"Mono\n" );
-  LCD_Font = &FreeSans12pt7b;
-  LCD_DrawText( (const uint8_t *)"Sans\n" );
-  LCD_Font = &FreeSerif12pt7b;
-  LCD_DrawText( (const uint8_t *)"Serif\n" );
+  //  LCD_Font = &FreeMono12pt7b;
+//  LCD_DrawText( (const uint8_t *)"Mono\n" );
+//  LCD_Font = &FreeSans12pt7b;
+//  LCD_DrawText( (const uint8_t *)"Sans\n" );
+//  LCD_Font = &FreeSerif12pt7b;
+//  LCD_DrawText( (const uint8_t *)"Serif\n" );
 
+  char text[64];
   //LCD_WriteFillRectPreclipped(10, 20, 30, 40, ILI9341_RED);
   //LCD_DrawHLine(41,60, 30, ILI9341_BLUE );
   //LCD_DrawVLine(40,61, 40, ILI9341_GREEN );
@@ -143,8 +145,37 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   flag = 0;
+  uint8_t rot= 3;
+  LCD_SetRotation(rot);
+  FT6206_setRotation(rot);
+
   while (1)
   {
+      if (HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) != GPIO_PIN_SET)
+      {
+          rot = (rot+1) % 4;
+          LCD_SetRotation(rot);
+          FT6206_setRotation(rot);
+          LCD_FillScreen(ILI9341_WHITE);
+          LCD_cursor_x = 0;
+          LCD_cursor_y = LCD_Font->yAdvance;
+          sprintf(text, "Rotation %d", rot);
+          printf("%s\r\n", text);
+          LCD_DrawText( (uint8_t *) text);
+      }
+
+      FT6206_readData();
+      if (FT6206_touched)
+      {
+          sprintf(text, "%3d,%3d", FT6206_touchX, FT6206_touchY);
+          printf("%s\r\n", text);
+          LCD_cursor_x = 0;
+          LCD_cursor_y = 2 * LCD_Font->yAdvance;
+          LCD_DrawFillRect(LCD_cursor_x, LCD_cursor_y, 120,-LCD_Font->yAdvance, ILI9341_WHITE);
+          LCD_DrawText( (uint8_t *) text);
+      }
+
+#if 0
       //printf("------------------\r\n");
       FT6206_readData();
       if (FT6206_touched)
@@ -157,7 +188,18 @@ int main(void)
           printf("Not Touched\r\n");
           flag = 1;
       }
+#endif
 
+#if 0
+      if (HAL_GPIO_ReadPin(TS_INT_GPIO_Port, TS_INT_Pin))
+      {
+          printf("*\r\n");
+      }
+      else
+      {
+          printf(".\r\n");
+      }
+#endif
 
       /* USER CODE END WHILE */
 

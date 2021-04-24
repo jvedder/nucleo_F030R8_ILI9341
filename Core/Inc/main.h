@@ -72,6 +72,8 @@ void Error_Handler(void);
 #define SPI1_MOSI_GPIO_Port GPIOA
 #define DATA_CMD_Pin GPIO_PIN_7
 #define DATA_CMD_GPIO_Port GPIOC
+#define TS_INT_Pin GPIO_PIN_8
+#define TS_INT_GPIO_Port GPIOA
 #define SD_DETECT_Pin GPIO_PIN_10
 #define SD_DETECT_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
