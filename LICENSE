@@ -37,6 +37,8 @@ SOFTWARE.
   ******************************************************************************
   /*
 
+--------------------------------------------------------------------------------
+File: Adafruit_GFX.cpp
 
 /*  
 This is the core graphics library for all our displays, providing a common
@@ -72,6 +74,7 @@ POSSIBILITY OF SUCH DAMAGE.
  */
  
  --------------------------------------------------------------------------------
+File: Adafruit_TFTLCD.cpp
 
 // Graphics library by ladyada/adafruit with init code from Rossum
 // MIT license
@@ -191,6 +194,4 @@ POSSIBILITY OF SUCH DAMAGE.
  */
   
  --------------------------------------------------------------------------------
- 
- 
  

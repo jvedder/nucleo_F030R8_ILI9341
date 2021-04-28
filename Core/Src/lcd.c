@@ -1,7 +1,35 @@
 /**
  * @file lcd.c
- *
+ * @brief   Driver for the ILI9341 2.8" TFT LCD Display (Adafruit # 2090)
  */
+/**
+ ******************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2021 John Vedder
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************
+ * Portions adapted from Adafruit Arduino Libraries. See LICENSE file.
+ ******************************************************************************
+ */
+
 #include "main.h"
 #include "spi.h"
 #include "lcd.h"
@@ -12,14 +40,14 @@
 #include "fonts/FreeSans12pt7b.h"
 #include "fonts/FreeSerif12pt7b.h"
 
-
-#define MADCTL_MY 0x80  ///< Bottom to top
-#define MADCTL_MX 0x40  ///< Right to left
-#define MADCTL_MV 0x20  ///< Reverse Mode
-#define MADCTL_ML 0x10  ///< LCD refresh Bottom to top
-#define MADCTL_RGB 0x00 ///< Red-Green-Blue pixel order
-#define MADCTL_BGR 0x08 ///< Blue-Green-Red pixel order
-#define MADCTL_MH 0x04  ///< LCD refresh right to left
+/* Values for Read Display MADCTL command */
+#define MADCTL_MY   0x80    // Bottom to top
+#define MADCTL_MX   0x40    // Right to left
+#define MADCTL_MV   0x20    // Reverse Mode
+#define MADCTL_ML   0x10    // LCD refresh Bottom to top
+#define MADCTL_RGB  0x00    // Red-Green-Blue pixel order
+#define MADCTL_BGR  0x08    // Blue-Green-Red pixel order
+#define MADCTL_MH   0x04    // LCD refresh right to left
 
 #define CS_ACTIVE()  	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET)
 #define CS_IDLE()	    HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET)
@@ -32,11 +60,11 @@
 #define SWAP_INT16(a, b) {int16_t t = a; a=b; b=t;}                                                             \
 
 
-uint8_t  LCD_rotation;    // Display rotation (0 thru 3)
+uint8_t LCD_rotation;    // Display rotation (0 thru 3)
 uint16_t LCD_width;       // Display width as modified by current rotation
 uint16_t LCD_height;      // Display height as modified by current rotation
 
-const GFXfont *LCD_Font = &FreeSerif12pt7b;
+const GFXfont *LCD_font = &FreeSerif12pt7b;
 int16_t LCD_cursor_x = 0;       // x location to start print()ing text
 int16_t LCD_cursor_y = 0;       // y location to start print()ing text
 uint16_t LCD_textcolor = 0;     // 16-bit background color for print()
@@ -44,8 +72,6 @@ uint16_t LCD_textbgcolor = 0;   // 16-bit text color for print()
 uint8_t LCD_textsize_x = 1;  // Desired magnification in X-axis of text to print()
 uint8_t LCD_textsize_y = 1;  // Desired magnification in Y-axis of text to print()
 uint8_t LCD_wrap = 1;           // If set, 'wrap' text at right edge of display
-
-
 
 ///**
 // *  Sends a single Command byte without any data
@@ -68,12 +94,13 @@ uint8_t LCD_wrap = 1;           // If set, 'wrap' text at right edge of display
  * @param   dataBytes         A pointer to the Data bytes to send
  * @param   numDataBytes      The number of bytes we should send
  */
-static void sendCommand( uint8_t commandByte, uint8_t *dataBytes, uint8_t numDataBytes )
+static void LCD_sendCommand( uint8_t commandByte, uint8_t *dataBytes,
+        uint8_t numDataBytes )
 {
     CS_ACTIVE( );	// Start Transaction
     DC_COMMAND( );	// Command mode
     HAL_SPI_Transmit( &hspi1, &commandByte, 1, LCD_TIMEOUT );
-    DC_DATA( );	// Data Mode
+    DC_DATA( );  // Data Mode
     if ( numDataBytes > 0 )
     {
         HAL_SPI_Transmit( &hspi1, dataBytes, numDataBytes, LCD_TIMEOUT );
@@ -82,57 +109,57 @@ static void sendCommand( uint8_t commandByte, uint8_t *dataBytes, uint8_t numDat
 }
 
 // clang-format off
-static const uint8_t initcmd[] =
+static const uint8_t LCD_init_cmds[] =
 {
-  0xEF, 3, 0x03, 0x80, 0x02,
-  0xCF, 3, 0x00, 0xC1, 0x30,
-  0xED, 4, 0x64, 0x03, 0x12, 0x81,
-  0xE8, 3, 0x85, 0x00, 0x78,
-  0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,
-  0xF7, 1, 0x20,
-  0xEA, 2, 0x00, 0x00,
-  ILI9341_PWCTR1  , 1, 0x23,             // Power control VRH[5:0]
-  ILI9341_PWCTR2  , 1, 0x10,             // Power control SAP[2:0];BT[3:0]
-  ILI9341_VMCTR1  , 2, 0x3e, 0x28,       // VCM control
-  ILI9341_VMCTR2  , 1, 0x86,             // VCM control2
-  ILI9341_MADCTL  , 1, 0x48,             // Memory Access Control , Rotation 0
-  ILI9341_VSCRSADD, 1, 0x00,             // Vertical scroll zero
-  ILI9341_PIXFMT  , 1, 0x55,
-  ILI9341_FRMCTR1 , 2, 0x00, 0x18,
-  ILI9341_DFUNCTR , 3, 0x08, 0x82, 0x27, // Display Function Control
-  0xF2, 1, 0x00,                         // 3Gamma Function Disable
-  ILI9341_GAMMASET , 1, 0x01,             // Gamma curve selected
-  ILI9341_GMCTRP1 , 15, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, // Set Gamma
-    0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00,
-  ILI9341_GMCTRN1 , 15, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, // Set Gamma
-    0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F,
-  ILI9341_SLPOUT  , 0x80,                // Exit Sleep
-  ILI9341_DISPON  , 0x80,                // Display on
-  0x00                                   // End of list
+        0xEF, 3, 0x03, 0x80, 0x02,            // Undocumented for ILI9341
+        0xCF, 3, 0x00, 0xC1, 0x30,            // Undocumented for ILI9341
+        0xED, 4, 0x64, 0x03, 0x12, 0x81,      // Undocumented for ILI9341
+        0xE8, 3, 0x85, 0x00, 0x78,            // Undocumented for ILI9341
+        0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,  // Undocumented for ILI9341
+        0xF7, 1, 0x20,                        // Undocumented for ILI9341
+        0xEA, 2, 0x00, 0x00,                  // Undocumented for ILI9341
+        ILI9341_PWCTR1, 1, 0x23,             // Power control VRH[5:0]
+        ILI9341_PWCTR2, 1, 0x10,             // Power control SAP[2:0];BT[3:0]
+        ILI9341_VMCTR1, 2, 0x3e, 0x28,       // VCM control
+        ILI9341_VMCTR2, 1, 0x86,             // VCM control2
+        ILI9341_MADCTL, 1, 0x48,           // Memory Access Control , Rotation 0
+        ILI9341_VSCRSADD, 1, 0x00,             // Vertical scroll zero
+        ILI9341_PIXFMT, 1, 0x55,
+        ILI9341_FRMCTR1, 2, 0x00, 0x18,
+        ILI9341_DFUNCTR, 3, 0x08, 0x82, 0x27,  // Display Function Control
+        0xF2, 1, 0x00,                         // 3Gamma Function Disable
+        ILI9341_GAMMASET, 1, 0x01,            // Gamma curve selected
+        ILI9341_GMCTRP1, 15, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08,  // Set Gamma
+        0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00,
+        ILI9341_GMCTRN1, 15, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07,  // Set Gamma
+        0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F,
+        ILI9341_SLPOUT, 0x80,                // Exit Sleep
+        ILI9341_DISPON, 0x80,                // Display on
+        0x00                                   // End of list
 };
 // clang-format on
 
 void LCD_Init( void )
 {
-    sendCommand( ILI9341_SWRESET, NULL, 0 );  // Engage software reset
+    LCD_sendCommand( ILI9341_SWRESET, NULL, 0 );  // Engage software reset
     HAL_Delay( 150 );
 
     uint8_t cmd;
     uint8_t x;
     uint8_t numArgs;
-    const uint8_t *addr = initcmd;
+    const uint8_t *addr = LCD_init_cmds;
 
-    while ( ( cmd = (uint8_t)(*addr++) ) > 0 )
+    while ( ( cmd = (uint8_t) ( *addr++ ) ) > 0 )
     {
-        x = *addr++ ;
+        x = *addr++;
         numArgs = x & 0x7F;
-        sendCommand( cmd, (uint8_t *)addr, numArgs );
+        LCD_sendCommand( cmd, (uint8_t*) addr, numArgs );
         addr += numArgs;
         if ( x & 0x80 ) HAL_Delay( 150 );
     }
 
-    LCD_width = ILI9341_TFTWIDTH;
-    LCD_height = ILI9341_TFTHEIGHT;
+    LCD_width = LCD_WIDTH;
+    LCD_height = LCD_HEIGHT;
 }
 
 /**
@@ -140,32 +167,34 @@ void LCD_Init( void )
  *
  * @param   m  The index for rotation, from 0-3 inclusive
  */
-void LCD_SetRotation(uint8_t m) {
-	LCD_rotation = m % 4; // can't be higher than 3
-	switch (LCD_rotation) {
-	case 0:
-		m = (MADCTL_MX | MADCTL_BGR);
-		LCD_width = ILI9341_TFTWIDTH;
-		LCD_height = ILI9341_TFTHEIGHT;
-		break;
-	case 1:
-		m = (MADCTL_MV | MADCTL_BGR);
-		LCD_width = ILI9341_TFTHEIGHT;
-		LCD_height = ILI9341_TFTWIDTH;
-		break;
-	case 2:
-		m = (MADCTL_MY | MADCTL_BGR);
-		LCD_width = ILI9341_TFTWIDTH;
-		LCD_height = ILI9341_TFTHEIGHT;
-		break;
-	case 3:
-		m = (MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR);
-		LCD_width = ILI9341_TFTHEIGHT;
-		LCD_height = ILI9341_TFTWIDTH;
-		break;
-	}
+void LCD_SetRotation( uint8_t m )
+{
+    LCD_rotation = m % 4;  // can't be higher than 3
+    switch ( LCD_rotation )
+    {
+        case 0:
+            m = ( MADCTL_MX | MADCTL_BGR );
+            LCD_width = LCD_WIDTH;
+            LCD_height = LCD_HEIGHT;
+            break;
+        case 1:
+            m = ( MADCTL_MV | MADCTL_BGR );
+            LCD_width = LCD_HEIGHT;
+            LCD_height = LCD_WIDTH;
+            break;
+        case 2:
+            m = ( MADCTL_MY | MADCTL_BGR );
+            LCD_width = LCD_WIDTH;
+            LCD_height = LCD_HEIGHT;
+            break;
+        case 3:
+            m = ( MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR );
+            LCD_width = LCD_HEIGHT;
+            LCD_height = LCD_WIDTH;
+            break;
+    }
 
-	sendCommand(ILI9341_MADCTL, &m, 1);
+    LCD_sendCommand( ILI9341_MADCTL, &m, 1 );
 }
 
 /**
@@ -173,9 +202,9 @@ void LCD_SetRotation(uint8_t m) {
  *
  *   @param   invert True to invert, False to have normal color
  */
-void LCD_InvertDisplay(uint8_t invert)
+void LCD_InvertDisplay( uint8_t invert )
 {
-    sendCommand(invert ? ILI9341_INVON : ILI9341_INVOFF, NULL, 0);
+    LCD_sendCommand( invert ? ILI9341_INVON : ILI9341_INVOFF, NULL, 0 );
 }
 
 /**
@@ -188,7 +217,7 @@ void LCD_ScrollTo( uint16_t y )
     uint8_t data[2];
     data[0] = y >> 8;
     data[1] = y & 0xff;
-    sendCommand( ILI9341_VSCRSADD, (uint8_t*) data, 2 );
+    LCD_sendCommand( ILI9341_VSCRSADD, (uint8_t*) data, 2 );
 }
 
 /**
@@ -200,9 +229,9 @@ void LCD_ScrollTo( uint16_t y )
 void LCD_SetScrollMargins( uint16_t top, uint16_t bottom )
 {
     // TFA+VSA+BFA must equal 320
-    if ( top + bottom <= ILI9341_TFTHEIGHT )
+    if ( top + bottom <= LCD_HEIGHT )
     {
-        uint16_t middle = ILI9341_TFTHEIGHT - top + bottom;
+        uint16_t middle = LCD_HEIGHT - top + bottom;
         uint8_t data[6];
         data[0] = top >> 8;
         data[1] = top & 0xff;
@@ -210,7 +239,7 @@ void LCD_SetScrollMargins( uint16_t top, uint16_t bottom )
         data[3] = middle & 0xff;
         data[4] = bottom >> 8;
         data[5] = bottom & 0xff;
-        sendCommand( ILI9341_VSCRDEF, (uint8_t*) data, 6 );
+        LCD_sendCommand( ILI9341_VSCRDEF, (uint8_t*) data, 6 );
     }
 }
 
@@ -250,19 +279,19 @@ void LCD_SetAddrWindow( uint16_t x1, uint16_t y1, uint16_t w, uint16_t h )
     uint8_t buffer[4];
     uint16_t end;
 
-    end = x1 + w - 1 ;
+    end = x1 + w - 1;
     buffer[0] = x1 >> 8;
     buffer[1] = x1;
     buffer[2] = end >> 8;
     buffer[3] = end;
-    sendCommand( ILI9341_CASET, buffer, 4);  // Column address set
+    LCD_sendCommand( ILI9341_CASET, buffer, 4 );  // Column address set
 
     end = y1 + h - 1;
     buffer[0] = y1 >> 8;
     buffer[1] = y1;
     buffer[2] = end >> 8;
     buffer[3] = end;
-    sendCommand( ILI9341_PASET, buffer, 4);  // Row address set
+    LCD_sendCommand( ILI9341_PASET, buffer, 4 );  // Row address set
 
     //sendCommand( ILI9341_RAMWR, NULL,0 );  // Write to RAM
 }
@@ -272,23 +301,23 @@ void LCD_SetAddrWindow( uint16_t x1, uint16_t y1, uint16_t w, uint16_t h )
  * Requires LCD_SetAddrWindow() has previously been called to set the fill
  * bounds.  'len' is inclusive, MUST be >= 1.
  */
-void LCD_WriteColor(uint16_t color, uint32_t len)
+void LCD_WriteColor( uint16_t color, uint32_t len )
 {
-  uint8_t buffer[2];
-  uint8_t cmd = ILI9341_RAMWR;
+    uint8_t buffer[2];
+    uint8_t cmd = ILI9341_RAMWR;
 
-  buffer[0] = color >>8;
-  buffer[1] = color;
+    buffer[0] = color >> 8;
+    buffer[1] = color;
 
-  CS_ACTIVE( );    // Start Transaction
-  DC_COMMAND( );  // Command mode
-  HAL_SPI_Transmit( &hspi1, &cmd, 1, LCD_TIMEOUT );
-  DC_DATA( ); // Data Mode
-  while (len--)
-  {
-      HAL_SPI_Transmit( &hspi1, buffer, 2, LCD_TIMEOUT );
-  }
-  CS_IDLE( );  // End Transaction
+    CS_ACTIVE( );    // Start Transaction
+    DC_COMMAND( );  // Command mode
+    HAL_SPI_Transmit( &hspi1, &cmd, 1, LCD_TIMEOUT );
+    DC_DATA( );  // Data Mode
+    while ( len-- )
+    {
+        HAL_SPI_Transmit( &hspi1, buffer, 2, LCD_TIMEOUT );
+    }
+    CS_IDLE( );  // End Transaction
 }
 
 /**
@@ -373,7 +402,6 @@ void LCD_WriteLine( int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     }
 }
 
-
 /**
  * -------------------------------------------------------------------------
  * The LCD_Draw* functions are higher level and include screen clipping,
@@ -389,13 +417,13 @@ void LCD_WriteLine( int16_t x0, int16_t y0, int16_t x1, int16_t y1,
  *    @param  y      Vertical position   (0 = top).
  *    @param  color  16-bit pixel color in '565' RGB format.
  */
-void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color)
+void LCD_DrawPixel( int16_t x, int16_t y, uint16_t color )
 {
-  if ((x >= 0) && (x < LCD_width) && (y >= 0) && (y < LCD_height))
-  {
-    LCD_SetAddrWindow(x, y, 1, 1);
-    LCD_WriteColor(color, 1);
-  }
+    if ( ( x >= 0 ) && ( x < LCD_width ) && ( y >= 0 ) && ( y < LCD_height ) )
+    {
+        LCD_SetAddrWindow( x, y, 1, 1 );
+        LCD_WriteColor( color, 1 );
+    }
 }
 
 /**
@@ -410,7 +438,8 @@ void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color)
  *                 corner, negative = above first corner).
  *  @param  color  16-bit fill color in '565' RGB format.
  */
-void LCD_DrawFillRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color )
+void LCD_DrawFillRect( int16_t x, int16_t y, int16_t w, int16_t h,
+        uint16_t color )
 {
 
     // Zero height or width does not display
@@ -419,14 +448,14 @@ void LCD_DrawFillRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
     // If negative width...
     if ( w < 0 )
     {
-        x += w + 1; // Move X to left edge
+        x += w + 1;  // Move X to left edge
         w = -w;     // Use positive width
     }
 
     // If negative height...
     if ( h < 0 )
     {
-        y += h + 1; // Move Y to top edge
+        y += h + 1;  // Move Y to top edge
         h = -h;     // Use positive height
     }
 
@@ -435,7 +464,7 @@ void LCD_DrawFillRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
     int16_t y2 = y + h - 1;
 
     // Completely Off screen does not display
-    if ( x > LCD_width  || x2 < 0 ||  y > LCD_height  || y2 < 0 ) return;
+    if ( x > LCD_width || x2 < 0 || y > LCD_height || y2 < 0 ) return;
 
     // Clip left
     if ( x < 0 )
@@ -444,13 +473,13 @@ void LCD_DrawFillRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
         w = x2 + 1;
     }
     // Clip top
-   if ( y < 0 )
+    if ( y < 0 )
     {
         y = 0;
         h = y2 + 1;
     }
     //clip right
-   if ( x2 >= LCD_width )
+    if ( x2 >= LCD_width )
     {
         w = LCD_width - x;
     }
@@ -462,7 +491,6 @@ void LCD_DrawFillRect( int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
 
     LCD_WriteFillRectPreclipped( x, y, w, h, color );
 }
-
 
 /**
  * Draw a horizontal line on the display. Edge clipping and rejection
@@ -597,9 +625,9 @@ void LCD_WriteChar( int16_t x, int16_t y, unsigned char c, uint16_t color,
         uint8_t size_x, uint8_t size_y )
 {
 
-    c -= ( LCD_Font->first );
-    GFXglyph *glyph = LCD_Font->glyph + c;
-    const uint8_t *bitmap = LCD_Font->bitmap;
+    c -= ( LCD_font->first );
+    GFXglyph *glyph = LCD_font->glyph + c;
+    const uint8_t *bitmap = LCD_font->bitmap;
 
     uint16_t bo = glyph->bitmapOffset;
     uint8_t w = glyph->width;
@@ -654,14 +682,14 @@ void LCD_DrawChar( uint8_t c )
     if ( c == '\n' )
     {
         LCD_cursor_x = 0;
-        LCD_cursor_y += ( LCD_textsize_y * ( LCD_Font->yAdvance ) );
+        LCD_cursor_y += ( LCD_textsize_y * ( LCD_font->yAdvance ) );
     }
     else if ( c != '\r' )
     {
-        uint8_t first = (uint8_t) ( LCD_Font->first );
-        if ( ( first <= c ) && ( c <= LCD_Font->last ) )
+        uint8_t first = (uint8_t) ( LCD_font->first );
+        if ( ( first <= c ) && ( c <= LCD_font->last ) )
         {
-            GFXglyph *glyph = LCD_Font->glyph + ( c - first );
+            GFXglyph *glyph = LCD_font->glyph + ( c - first );
             uint8_t w = glyph->width;
             uint8_t h = glyph->height;
             if ( ( w > 0 ) && ( h > 0 ) )
@@ -672,7 +700,7 @@ void LCD_DrawChar( uint8_t c )
                                 > LCD_width ) )
                 {
                     LCD_cursor_x = 0;
-                    LCD_cursor_y += ( LCD_textsize_y * ( LCD_Font->yAdvance ) );
+                    LCD_cursor_y += ( LCD_textsize_y * ( LCD_font->yAdvance ) );
                 }
                 LCD_WriteChar( LCD_cursor_x, LCD_cursor_y, c, LCD_textcolor,
                         LCD_textsize_x, LCD_textsize_y );
@@ -681,7 +709,6 @@ void LCD_DrawChar( uint8_t c )
         }
     }
 }
-
 
 /**
  *   Draws a string of text at the current cursor position. Text must be null-terminated and less than 128
@@ -693,11 +720,11 @@ void LCD_DrawText( const uint8_t *text )
 {
     uint16_t overrun = 128;
 
-    while (*text && overrun)
+    while ( *text && overrun )
     {
         /* buffer to remove const attribute */
         uint8_t c = (uint8_t) *text;
-        LCD_DrawChar(c);
+        LCD_DrawChar( c );
         text++;
         overrun--;
     }

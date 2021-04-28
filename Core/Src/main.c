@@ -28,9 +28,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lcd.h"
-#include "FT6206.h"
+#include "ts.h"
 #include <stdio.h>
 #include <string.h>
+
 //#include <stdarg.h> //for va_list var arg functions
 
 /* USER CODE END Includes */
@@ -120,11 +121,11 @@ int main(void)
   printf("Build: " __DATE__ ", " __TIME__ "\r\n");
 
   LCD_Init();
-  LCD_FillScreen(ILI9341_WHITE);
+  LCD_FillScreen(LCD_WHITE);
   LCD_cursor_x = 0;
   LCD_cursor_y = 40;
-  LCD_textcolor = ILI9341_BLACK;
-  LCD_Font = &FreeMono12pt7b;
+  LCD_textcolor = LCD_BLACK;
+  LCD_font = &FreeMono12pt7b;
   //  LCD_Font = &FreeMono12pt7b;
 //  LCD_DrawText( (const uint8_t *)"Mono\n" );
 //  LCD_Font = &FreeSans12pt7b;
@@ -138,7 +139,7 @@ int main(void)
   //LCD_DrawVLine(40,61, 40, ILI9341_GREEN );
   //LCD_DrawLine(1,1, 100, 200, ILI9341_WHITE);
 
-  FT6206_init(40);
+  TS_Init(40);
 
   /* USER CODE END 2 */
 
@@ -147,7 +148,7 @@ int main(void)
   flag = 0;
   uint8_t rot= 3;
   LCD_SetRotation(rot);
-  FT6206_setRotation(rot);
+  TS_SetRotation(rot);
 
   while (1)
   {
@@ -155,32 +156,32 @@ int main(void)
       {
           rot = (rot+1) % 4;
           LCD_SetRotation(rot);
-          FT6206_setRotation(rot);
-          LCD_FillScreen(ILI9341_WHITE);
+          TS_SetRotation(rot);
+          LCD_FillScreen(LCD_WHITE);
           LCD_cursor_x = 0;
-          LCD_cursor_y = LCD_Font->yAdvance;
+          LCD_cursor_y = LCD_font->yAdvance;
           sprintf(text, "Rotation %d", rot);
           printf("%s\r\n", text);
           LCD_DrawText( (uint8_t *) text);
       }
 
-      FT6206_readData();
-      if (FT6206_touched)
+      TS_ReadData();
+      if (TS_isTouched)
       {
-          sprintf(text, "%3d,%3d", FT6206_touchX, FT6206_touchY);
+          sprintf(text, "%3d,%3d", TS_touchX, TS_touchY);
           printf("%s\r\n", text);
           LCD_cursor_x = 0;
-          LCD_cursor_y = 2 * LCD_Font->yAdvance;
-          LCD_DrawFillRect(LCD_cursor_x, LCD_cursor_y, 120,-LCD_Font->yAdvance, ILI9341_WHITE);
+          LCD_cursor_y = 2 * LCD_font->yAdvance;
+          LCD_DrawFillRect(LCD_cursor_x, LCD_cursor_y, 120,-LCD_font->yAdvance, LCD_WHITE);
           LCD_DrawText( (uint8_t *) text);
       }
 
 #if 0
       //printf("------------------\r\n");
-      FT6206_readData();
-      if (FT6206_touched)
+      TS_ReadData();
+      if (TS_isTouched)
       {
-          printf("(%d,%d)\r\n", FT6206_touchX, FT6206_touchY);
+          printf("(%d,%d)\r\n", TS_touchX, TS_touchY);
           flag = 0;
       }
       else if (flag == 0)
